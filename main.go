@@ -34,7 +34,7 @@ func main() {
 		for {
 			time.Sleep(time.Second)
 			log.Println("Checking if started...")
-			resp, err := http.Get("http://localhost:8090")
+			resp, err := http.Get("http://localhost:8081")
 			if err != nil {
 				log.Println("Failed:", err)
 				continue
@@ -48,7 +48,7 @@ func main() {
 		}
 		log.Println("SERVER 启动成功!")
 	}()
-	err := http.ListenAndServe(":8090", nil) // 设置监听的端口
+	err := http.ListenAndServe(":8081", nil) // 设置监听的端口
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
