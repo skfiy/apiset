@@ -110,7 +110,7 @@ func WriteWithIoutil(name, content string) string {
 	data :=  []byte(content)
 	if ioutil.WriteFile("./mp3/"+name,data,0644) == nil {
 		fmt.Println("生成音频文件成功:", name)
-		return MsgData(200,"生成成功","http://localhost:8081/mp3/"+name)
+		return MsgData(200,"生成成功","http://api.cloolc.club/mp3/"+name)
 	}else{
 		return MsgData(50401,"生成失败","")
 	}
