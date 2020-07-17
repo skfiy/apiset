@@ -86,7 +86,7 @@ func Mp3Init(w http.ResponseWriter, r *http.Request){
 
 //首页
 func Index(w http.ResponseWriter, r *http.Request){
-	q := "QQ:1923021";
+	q := "如有问题请联系QQ:1923021";
 	s := "------API------";
 	z := "\r  /text?content=      //文字转语音获取MP3\n" +
 		 "\r  /destiny            //命运2周报\n" +
