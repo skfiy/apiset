@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -90,12 +92,85 @@ func Index(w http.ResponseWriter, r *http.Request){
 	s := "------API------";
 	z := "\r  /text?content=      //文字转语音获取MP3\n" +
 		 "\r  /destiny            //命运2周报\n" +
+		 "\r  /getip            //获取IP地址位置\n" +
 		 "\r ------API------";
-	fmt.Fprintf(w, "  %s \n %s\n%s", q,s,z);
+
+	fmt.Fprintf(w, "  %s \n %s\n%s\n", q,s,z);
 
 }
 
+func GetIp(w http.ResponseWriter, r *http.Request){
+
+	//获取IP地址
+	ip := ClientPublicIP(r);
+	if ip =="" {
+		ip = ClientIP(r);
+	}
+	json :=  Ipcity(ip);
+
+	fmt.Fprintf(w, "%s",json);
+
+}
+
+//查询 IP 位置
+func Ipcity(ip string) string{
+	url := "http://ip.taobao.com/outGetIpInfo?ip="+ip+"&accessKey=alibaba-inc";
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return string(data);
+}
+
+//获取当前请求用户IP地址
+func ClientIP(r *http.Request) string {
+	xForwardedFor := r.Header.Get("X-Forwarded-For")
+	ip := strings.TrimSpace(strings.Split(xForwardedFor, ",")[0])
+	if ip != "" {
+		return ip
+	}
+
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if ip != "" {
+		return ip
+	}
+
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+		return ip
+	}
+	return ""
+}
+
+// ClientPublicIP 尽最大努力实现获取客户端公网 IP 的算法。
+// 解析 X-Real-IP 和 X-Forwarded-For 以便于反向代理（nginx 或 haproxy）可以正常工作。
+func ClientPublicIP(r *http.Request) string {
+	var ip string
+	for _, ip = range strings.Split(r.Header.Get("X-Forwarded-For"), ",") {
+		ip = strings.TrimSpace(ip)
+		fmt.Println(ip)
+		if ip != ""  {
+			return ip
+		}
+	}
+
+	ip = strings.TrimSpace(r.Header.Get("X-Real-Ip"))
+	if ip != ""  {
+		return ip
+	}
+	if ip, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr)); err == nil {
+			return ip
+	}
+	return ""
+}
+
+
 func main() {
+	http.HandleFunc("/getip",GetIp)
 	http.HandleFunc("/mp3/",Mp3Init)
 	http.HandleFunc("/text", TextConversionMp3)
 	http.HandleFunc("/destiny", GetDestinyDataSet)
