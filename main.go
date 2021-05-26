@@ -70,6 +70,26 @@ func TextConversionMp3(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func Fanyi(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Fatal("系统错误" + err.Error())
+	}
+	var msg string
+	content := r.Form.Get("data")
+	s, _ := ioutil.ReadAll(r.Body)
+	fmt.Println(s)
+	if content == "" {
+		msg = MsgData(200, "参数值为空", "")
+		fmt.Fprintf(w, "%s", msg)
+	} else {
+		msg = Fanyiget(content)
+		fmt.Fprintf(w, "%s", msg)
+	}
+	fmt.Println(content)
+}
+
 func Mp3Init(w http.ResponseWriter, r *http.Request) {
 	realPath := r.URL.String()
 	fmt.Println(realPath)
@@ -94,6 +114,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		"\r  /destiny             //命运2周报\n" +
 		"\r  /getip               //获取IP地址位置\n" +
 		"\r  /lunar               //获取农历日\n" +
+		"\r  /fanyi?data=         //翻译\n" +
 		"\r ------API------"
 
 	fmt.Fprintf(w, "  %s \n %s\n%s\n", q, s, z)
@@ -146,6 +167,21 @@ func Lunar(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", data)
 }
 
+//翻译
+func Fanyiget(d string) string {
+	url := "http://www.skfiy.com/fy/index.php?s=" + d
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return string(data)
+}
+
 //获取当前请求用户IP地址
 func ClientIP(r *http.Request) string {
 	xForwardedFor := r.Header.Get("X-Forwarded-For")
@@ -188,6 +224,7 @@ func ClientPublicIP(r *http.Request) string {
 }
 
 func main() {
+	http.HandleFunc("/fanyi", Fanyi)
 	http.HandleFunc("/lunar", Lunar)
 	http.HandleFunc("/getip", GetIp)
 	http.HandleFunc("/mp3/", Mp3Init)
