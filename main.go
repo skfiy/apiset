@@ -90,6 +90,26 @@ func Fanyi(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(content)
 }
 
+func Slink(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		log.Fatal("系统错误" + err.Error())
+	}
+	var msg string
+	content := r.Form.Get("data")
+	s, _ := ioutil.ReadAll(r.Body)
+	fmt.Println(s)
+	if content == "" {
+		msg = MsgData(200, "参数值为空", "")
+		fmt.Fprintf(w, "%s", msg)
+	} else {
+		msg = Shortlink(content)
+		fmt.Fprintf(w, "%s", msg)
+	}
+	fmt.Println(content)
+}
+
 func Mp3Init(w http.ResponseWriter, r *http.Request) {
 	realPath := r.URL.String()
 	fmt.Println(realPath)
@@ -115,6 +135,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		"\r  /getip               //获取IP地址位置\n" +
 		"\r  /lunar               //获取农历日\n" +
 		"\r  /fanyi?data=         //翻译\n" +
+		"\r  /slink?data=         //转换go1p.cn短链接,请携带https 或 http \n" +
 		"\r ------API------"
 
 	fmt.Fprintf(w, "  %s \n %s\n%s\n", q, s, z)
@@ -182,6 +203,20 @@ func Fanyiget(d string) string {
 	return string(data)
 }
 
+func Shortlink(d string) string {
+	url := "https://www.acfunghost.com/urls/?s=" + d
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return string(data)
+}
+
 //获取当前请求用户IP地址
 func ClientIP(r *http.Request) string {
 	xForwardedFor := r.Header.Get("X-Forwarded-For")
@@ -224,6 +259,7 @@ func ClientPublicIP(r *http.Request) string {
 }
 
 func main() {
+	http.HandleFunc("/slink", Slink)
 	http.HandleFunc("/fanyi", Fanyi)
 	http.HandleFunc("/lunar", Lunar)
 	http.HandleFunc("/getip", GetIp)
